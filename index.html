@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Անձնական Բյուջեի Կառավարում</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="brand">EKNBALANCE</div>
+
+    <div class="nav-title">ՀԻՄՆԱԿԱՆ</div>
+    <div class="sidebar-nav-row" style="display: flex; flex-direction: column;">
+        <a href="#dashboard" class="nav-link active">▦ Գլխավոր էջ</a>
+        <a href="#transactions" class="nav-link">↗ Ծախսեր և եկամուտներ</a>
+        <a href="#rule" class="nav-link">◉ 50 / 30 / 20 կանոն</a>
+        <a href="#deposit" class="nav-link">◆ Ավանդի հաշվիչ</a>
+        <a href="#recommendations" class="nav-link">✧ Խորհուրդներ</a>
+    </div>
+
+    <div class="sidebar-tools">
+        <button type="button" class="sidebar-btn" onclick="restoreDemoData()">↺ Վերականգնել ցուցադրական տվյալները</button>
+        <button type="button" class="sidebar-btn danger-outline" onclick="clearCurrentMonthData()">✕ Մաքրել ընթացիկ ամիսը</button>
+    </div>
+
+    <div class="sidebar-bottom">
+        <div class="brand-small">EKNBALANCE • PRO</div>
+        <p>Կառավարիր գումարդ։ Հավասարակշռիր բյուջեդ։ Կառուցիր ապագադ։</p>
+    </div>
+</aside>
+
+<main class="main">
+
+    <header class="header">
+        <div>
+            <h1>EKNBALANCE</h1>
+        </div>
+
+        <div class="date-box">
+            <span>Այսօրվա ամսաթիվը</span>
+            <strong id="currentDate">--</strong>
+        </div>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard">
+
+        <div class="hero">
+            <div>
+                <span class="eyebrow"> • PERSONAL FINANCE & AUTO-REBALANCER</span>
+                <h2>Բարի գալուստ <span>EKNBALANCE </span></h2>
+                <p>Հետևիր եկամուտներին, կանխիր դեֆիցիտը և ավտոմատ հավասարակշռիր 50/30/20 բյուջեն։</p>
+            </div>
+            <div class="hero-symbol">◈</div>
+        </div>
+
+        <div class="card period-card">
+            <div>
+                <h3>Հաշվետու ժամանակաշրջան</h3>
+                <p>Ընտրիր այն ամիսը, որի բյուջեն, կարգավորումները և գործարքները ցանկանում ես կառավարել։</p>
+            </div>
+            <div class="period-controls">
+                <input type="month" id="selectedMonth" onchange="onMonthChange()">
+                <button type="button" class="btn-secondary" onclick="restoreDemoData()">Ցուցադրական տվյալներ</button>
+            </div>
+        </div>
+
+        <div class="card settings-card">
+            <h3>Բյուջեի կարգավորումներ և փոփոխականներ (localStorage)</h3>
+
+            <div class="settings-grid-4">
+                <div>
+                    <label for="incomeInput">Հիմնական ամսական եկամուտ (֏)</label>
+                    <input type="number" id="incomeInput" min="0" step="1000" placeholder="Օրինակ՝ 650000">
+                </div>
+
+                <div>
+                    <label for="limitInput">Ծախսերի առավելագույն սահմանաչափ (֏)</label>
+                    <input type="number" id="limitInput" min="0" step="1000" placeholder="Օրինակ՝ 520000">
+                </div>
+
+                <div>
+                    <label for="reserveGoalInput">Ամսական պահուստի նպատակ (֏)</label>
+                    <input type="number" id="reserveGoalInput" min="0" step="1000" placeholder="Օրինակ՝ 130000">
+                </div>
+
+                <div>
+                    <label for="extraIncomeInput">Լրացուցիչ եկամուտ (֏)</label>
+                    <input type="number" id="extraIncomeInput" min="0" step="1000" placeholder="Օրինակ՝ 80000">
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button type="button" onclick="saveSettings()">Պահպանել կարգավորումները</button>
+                <button type="button" class="btn-secondary" onclick="apply80PercentLimit()">⚡ Ավտոմատ 80% սահմանաչափ</button>
+                <button type="button" class="btn-secondary" onclick="restoreDemoData()">↺ Վերականգնել նախնական տվյալները</button>
+            </div>
+
+            <p class="hint">
+                Ընդհանուր հասանելի եկամուտը ներառում է հիմնական ամսական եկամուտը, պարամետրերում նշված լրացուցիչ եկամուտը և գործարքների ցանկում գրանցված լրացուցիչ եկամուտները։
+            </p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>Ամսական եկամուտ</span>
+                <h2 id="incomeValue">0 ֏</h2>
+                <small id="incomeBreakdownSub">Հիմնական + լրացուցիչ մուտքեր</small>
+            </div>
+
+            <div class="stat-card">
+                <span>Ընդհանուր ծախսեր</span>
+                <h2 id="spentValue" class="negative-text">0 ֏</h2>
+                <small id="spentBreakdownSub">Կատարված ծախսեր</small>
+            </div>
+
+            <div class="stat-card">
+                <span>Մնացորդ</span>
+                <h2 id="balanceValue">0 ֏</h2>
+                <small>Ընդհանուր մուտքեր − ծախսեր</small>
+            </div>
+
+            <div class="stat-card">
+                <span>Խնայողություն և պահուստ</span>
+                <h2 id="savingValue" class="orange-text">0 ֏</h2>
+                <small id="reserveGoalSub">Պահուստի նպատակ՝ 0 ֏</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-heading">
+                <div>
+                    <h3>Բյուջեի սահմանաչափի վերահսկում</h3>
+                    <p>Որքան գումար ես օգտագործել ծախսերի առավելագույն սահմանաչափից։</p>
+                </div>
+                <strong id="limitPercent">0%</strong>
+            </div>
+
+            <div class="progress-track">
+                <div id="limitProgress"></div>
+            </div>
+            <p class="hint" id="limitMessage"></p>
+        </div>
+
+        <!-- AUTO-BALANCE / REBALANCER -->
+        <div class="card rebalancer-card" id="rebalancerSection">
+            <div class="section-heading" style="margin-bottom: 10px;">
+                <div>
+                    <span class="eyebrow">AUTO-BALANCE / REBALANCER</span>
+                    <h3 style="margin-top: 6px; margin-bottom: 4px;">Բյուջեի հավասարակշռման համակարգ</h3>
+                    <p>Հաշվարկում է դեֆիցիտը, 50/30/20 շեղումները, ցանկությունների ավելցուկը և առաջարկում հավասարակշռված պլան։</p>
+                </div>
+            </div>
+
+            <div class="rebalancer-metrics">
+                <div class="rebalance-box">
+                    <span>Բյուջեի դեֆիցիտ / ճեղքվածք</span>
+                    <strong id="rebalanceDeficit">0 ֏</strong>
+                </div>
+                <div class="rebalance-box">
+                    <span>50/30/20 շեղման միավոր</span>
+                    <strong id="rebalanceDeviation">0 ֏</strong>
+                </div>
+                <div class="rebalance-box">
+                    <span>Ցանկությունների ավելցուկ</span>
+                    <strong id="rebalanceWantsExcess">0 ֏</strong>
+                </div>
+                <div class="rebalance-box">
+                    <span>Առաջարկվող սահմանաչափ</span>
+                    <strong id="rebalanceSuggestedLimit">0 ֏</strong>
+                </div>
+            </div>
+
+            <div class="rebalance-summary" id="rebalanceSummaryText">
+                Վերլուծությունը հաշվարկվում է...
+            </div>
+
+            <div class="btn-row">
+                <button type="button" class="btn-accent" onclick="applyBalancedPlan()">✦ Կիրառել հավասարակշռված պլանը</button>
+                <button type="button" class="btn-secondary" onclick="apply80PercentLimit()">⚡ Ավտոմատ 80% սահմանաչափ</button>
+            </div>
+        </div>
+
+        <div class="status-card" id="balanceStatus">
+            <h3>Ֆինանսական կարգավիճակ</h3>
+            <p>Մուտքագրիր եկամուտն ու ծախսերը՝ գնահատական ստանալու համար։</p>
+        </div>
+
+    </section>
+
+    <!-- TRANSACTIONS -->
+    <section id="transactions" class="section">
+        <div class="section-heading">
+            <div>
+                <h2>Եկամուտներ և ծախսեր ըստ տեսակների</h2>
+                <p>Կառավարիր անհրաժեշտ կարիքները (50%), ցանկությունները (30%), խնայողությունները (20%) և լրացուցիչ եկամուտները։</p>
+            </div>
+        </div>
+
+        <div class="transaction-layout">
+
+            <div class="card">
+                <h3>Նոր գործարք</h3>
+
+                <label for="transactionType">Գործարքի տեսակ</label>
+                <select id="transactionType" onchange="updateCategoryOptions()">
+                    <option value="expense">Ծախս</option>
+                    <option value="income">Լրացուցիչ եկամուտ</option>
+                </select>
+
+                <label for="transactionName">Անվանում</label>
+                <input type="text" id="transactionName" placeholder="Օրինակ՝ Մթերային գնումներ կամ Ֆրիլանս նախագիծ">
+
+                <label for="transactionCategory">Հիմնական կատեգորիա (50 / 30 / 20)</label>
+                <select id="transactionCategory" onchange="updateSubcategoryOptions()"></select>
+
+                <label for="transactionSubcategory">Ենթակատեգորիա</label>
+                <select id="transactionSubcategory"></select>
+
+                <label for="transactionAmount">Գումար (֏)</label>
+                <input type="number" id="transactionAmount" placeholder="Օրինակ՝ 25000" min="1">
+
+                <label for="transactionDate">Ամսաթիվ</label>
+                <input type="date" id="transactionDate">
+
+                <button type="button" class="full-btn" onclick="addTransaction()">
+                    + Ավելացնել գործարք
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="section-heading" style="margin-bottom: 12px;">
+                    <h3>Գործարքների պատմություն</h3>
+                    <span id="transactionCount">0 գործարք</span>
+                </div>
+
+                <div class="filter-bar">
+                    <input type="text" id="filterSearch" oninput="renderTransactions()" placeholder="Որոնել անվանումով կամ ենթակատեգորիայով...">
+                    <select id="filterCategory" onchange="renderTransactions()">
+                        <option value="all">Բոլոր կատեգորիաները</option>
+                        <option value="needs">Անհրաժեշտ կարիքներ (50%)</option>
+                        <option value="wants">Ցանկություններ (30%)</option>
+                        <option value="savings">Խնայողություններ (20%)</option>
+                        <option value="income">Լրացուցիչ եկամուտ</option>
+                    </select>
+                    <select id="filterSort" onchange="renderTransactions()">
+                        <option value="date_desc">Ամսաթիվ՝ նորից հին</option>
+                        <option value="date_asc">Ամսաթիվ՝ հնից նոր</option>
+                        <option value="amount_desc">Գումար՝ նվազման կարգով</option>
+                        <option value="amount_asc">Գումար՝ աճման կարգով</option>
+                    </select>
+                </div>
+
+                <div id="transactionList">
+                    <p class="empty">Այս ամսվա գործարքներ չկան։</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 50/30/20 RULE -->
+    <section id="rule" class="section">
+        <div class="section-heading">
+            <div>
+                <h2>50 / 30 / 20 բյուջետավորման կանոն և վիզուալիզացիա</h2>
+                <p>Ընդհանուր եկամտի նպատակային բաշխում՝ 50% կարիքներ, 30% ցանկություններ, 20% խնայողություններ։</p>
+            </div>
+        </div>
+
+        <div class="rule-grid">
+
+            <div class="rule-card needs">
+                <span class="rule-number">50%</span>
+                <h3>Անհրաժեշտ կարիքներ</h3>
+                <p>Սնունդ, բնակարան, կոմունալ վճարներ, տրանսպորտ, առողջություն։</p>
+                <h2 id="needsTarget">0 ֏</h2>
+                <div class="mini-progress"><div id="needsProgress"></div></div>
+                <p id="needsActual">Փաստացի՝ 0 ֏ (0%)</p>
+            </div>
+
+            <div class="rule-card wants">
+                <span class="rule-number">30%</span>
+                <h3>Ցանկություններ</h3>
+                <p>Ժամանց, ռեստորաններ, գնումներ, բաժանորդագրություններ, ճանապարհորդություն։</p>
+                <h2 id="wantsTarget">0 ֏</h2>
+                <div class="mini-progress"><div id="wantsProgress"></div></div>
+                <p id="wantsActual">Փաստացի՝ 0 ֏ (0%)</p>
+            </div>
+
+            <div class="rule-card savings">
+                <span class="rule-number">20%</span>
+                <h3>Խնայողություններ</h3>
+                <p>Արտակարգ պահուստ, բանկային ավանդ, ներդրումներ, երկարաժամկետ նպատակներ։</p>
+                <h2 id="savingsTarget">0 ֏</h2>
+                <div class="mini-progress"><div id="savingsProgress"></div></div>
+                <p id="savingsActual">Փաստացի՝ 0 ֏ (0%)</p>
+            </div>
+
+        </div>
+
+        <div class="charts-dual-grid">
+            <div class="card chart-card">
+                <h3>Նպատակային vs Փաստացի բաշխում (50/30/20)</h3>
+                <div class="chart-container">
+                    <canvas id="budgetBarChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card chart-card">
+                <h3>Փաստացի ծախսերի կառուցվածքը</h3>
+                <div class="chart-container">
+                    <canvas id="budgetDoughnutChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 18px;">
+            <h3>Կանոնի պահպանման վերլուծություն</h3>
+            <div id="ruleAnalysis"></div>
+        </div>
+    </section>
+
+    <!-- DEPOSIT -->
+    <section id="deposit" class="section">
+        <div class="section-heading">
+            <div>
+                <h2>Ավանդի հաշվիչ</h2>
+                <p>Հաշվիր պարզ և բարդ տոկոսադրույքով ավանդի եկամտաբերությունը և վերջնական գումարը։</p>
+            </div>
+        </div>
+
+        <div class="deposit-layout">
+            <div class="card">
+                <h3>Ավանդի պայմաններ</h3>
+
+                <label for="depositAmount">Ներդրվող գումար (֏)</label>
+                <input type="number" id="depositAmount" min="0" step="1000" value="300000" placeholder="Օրինակ՝ 300000">
+
+                <label for="depositRate">Տարեկան տոկոսադրույք (%)</label>
+                <input type="number" id="depositRate" min="0" step="0.1" value="9.5" placeholder="Օրինակ՝ 9.5">
+
+                <label for="depositMonths">Ավանդի ժամկետ (ամիս)</label>
+                <input type="number" id="depositMonths" min="1" value="12" placeholder="Օրինակ՝ 12">
+
+                <label for="depositType">Տոկոսների հաշվարկման ձև</label>
+                <select id="depositType">
+                    <option value="simple">Պարզ տոկոսադրույք</option>
+                    <option value="compound" selected>Բարդ տոկոսադրույք՝ ամսական կապիտալացմամբ</option>
+                </select>
+
+                <button type="button" class="full-btn" onclick="calculateDeposit()">
+                    Հաշվել ավանդը
+                </button>
+            </div>
+
+            <div class="card deposit-result">
+                <span class="eyebrow">DEPOSIT ESTIMATION</span>
+                <h3>Ավանդի վերջնական արժեքը</h3>
+                <h1 id="depositFinal">0 ֏</h1>
+
+                <div class="result-row">
+                    <span>Սկզբնական գումար</span>
+                    <strong id="depositInitial">0 ֏</strong>
+                </div>
+
+                <div class="result-row">
+                    <span>Հաշվարկված տոկոսներ</span>
+                    <strong id="depositProfit">0 ֏</strong>
+                </div>
+
+                <div class="result-row">
+                    <span>Ժամկետ</span>
+                    <strong id="depositPeriod">-</strong>
+                </div>
+
+                <p class="hint">
+                    Հաշվարկը մոտավոր է և չի ներառում հնարավոր հարկերը, միջնորդավճարները կամ բանկի հատուկ պայմանները։
+                </p>
+            </div>
+        </div>
+
+        <div class="card deposit-conditions">
+            <h3>Ավանդ ներդնելու կարևոր պայմանները</h3>
+            <ul>
+                <li>Համեմատել տարբեր բանկերի տարեկան տոկոսադրույքները։</li>
+                <li>Ուսումնասիրել ավանդի նվազագույն գումարը և ժամկետը։</li>
+                <li>Պարզել՝ հնարավոր է արդյոք վաղաժամկետ դադարեցնել ավանդը։</li>
+                <li>Պարզել՝ տոկոսները վճարվում են ամսակա՞ն, թե՞ ժամկետի ավարտին։</li>
+                <li>Ստուգել ավանդների երաշխավորման պայմաններն ու սահմանաչափերը։</li>
+                <li>Մինչև ավանդ ներդնելը ունենալ հասանելի արտակարգ պահուստ։</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- RECOMMENDATIONS -->
+    <section id="recommendations" class="section">
+        <div class="section-heading">
+            <div>
+                <h2>Անհատական խորհրդատու</h2>
+                <p>Դինամիկ ֆինանսական խորհուրդներ՝ ըստ քո ընթացիկ բյուջեի, պահուստի և 50/30/20 ցուցանիշների։</p>
+            </div>
+        </div>
+
+        <div class="advisor-banner">
+            <div class="advisor-icon">✧</div>
+            <div>
+                <span class="eyebrow">SMART FINANCIAL ADVISOR</span>
+                <h2>Կառավարիր գումարդ խելամիտ կերպով</h2>
+                <p>Վերլուծիր ծախսերը, կրճատիր ցանկությունների ավելցուկը և համալրիր պահուստային ֆոնդը։</p>
+            </div>
+        </div>
+
+        <div class="recommendation-grid">
+            <div class="card">
+                <h3>Ծախսերի կրճատման պայմաններ</h3>
+                <ul>
+                    <li>Առաջնահերթություն տալ անհրաժեշտ կարիքներին։</li>
+                    <li>Կրճատել չպլանավորված և իմպուլսային գնումները։</li>
+                    <li>Համեմատել ապրանքների և ծառայությունների գները։</li>
+                    <li>Սահմանել շաբաթական ծախսերի սահմանաչափ։</li>
+                    <li>Խուսափել չօգտագործվող բաժանորդագրություններից։</li>
+                    <li>Գնումից առաջ կիրառել 24 ժամ մտածելու կանոնը։</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Բյուջեն հավասարակշռելու պայմաններ</h3>
+                <ul>
+                    <li>Ընդհանուր ծախսերը չպետք է գերազանցեն հասանելի եկամուտը։</li>
+                    <li>Պահպանել 50/30/20 նպատակային բաշխումը։</li>
+                    <li>Ամսվա սկզբին առանձնացնել պահուստային խնայողությունները։</li>
+                    <li>Նվազեցնել ցանկությունների վրա կատարվող ծախսերը դեֆիցիտի դեպքում։</li>
+                    <li>Ձևավորել 3–6 ամսվա անհրաժեշտ ծախսերին համարժեք պահուստ։</li>
+                    <li>Ամեն ամիս վերանայել ֆինանսական արդյունքները։</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card advice-card">
+            <h3>Քո անհատական ֆինանսական խորհուրդները</h3>
+            <div id="smartAdvice">
+                Գրանցիր քո ֆինանսական տվյալները՝ անհատական խորհուրդներ ստանալու համար։
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <strong>Անձնական Բյուջեի Կառավարում• EUBALANCE</strong>
+        <span>Անձնական Բյուջեի Կառավարման Համակարգ © 2026</span>
+    </footer>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
